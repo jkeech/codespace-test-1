@@ -5,12 +5,21 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python (Integrated Terminal)",
-            "type": "python",
+            "type": "perl",
             "request": "launch",
-            "program": "${workspaceFolder}/test-project/hello.py",
-            "cwd":"${workspaceFolder}/test-project",
-            "console": "integratedTerminal"
+            "name": "Perl-Debug local",
+            "console": "integratedTerminal",
+            "program": "${workspaceFolder}/test-project/sample.pl",
+            "exec": "perl",
+            "execArgs": [],
+            "root": "${workspaceRoot}/test-project/",
+            "inc": [],
+            "args": [],
+            "env": {},
+            "debugRaw": false,
+            "debugLog": false,
+            "stopOnEntry": true,
+            "sessions": "single"
         }
     ]
 }
