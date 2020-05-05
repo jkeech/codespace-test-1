@@ -1,7 +1,6 @@
 {
-	"name": "C++",
+	"name": "Node.js 14",
 	"dockerFile": "Dockerfile",
-	"runArgs": [ "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined"],
 
 	// Set *default* container specific settings.json values on container create.
 	"settings": { 
@@ -10,16 +9,15 @@
 
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
-		"ms-vscode.cpptools"
+		"dbaeumer.vscode-eslint"
 	]
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "gcc -v",
+	// "postCreateCommand": "yarn install",
 
 	// Uncomment to connect as a non-root user. See https://aka.ms/vscode-remote/containers/non-root.
-	// "remoteUser": "vscode"
-
+	// "remoteUser": "node"
 }
