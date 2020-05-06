@@ -1,4 +1,4 @@
 {
-	"dockerFile": "Dockerfile",
-	"mounts": [ "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind" ]
+	"image":"debian:10",
+	"mounts": [ "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind" ]
 }
