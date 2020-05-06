@@ -5,19 +5,13 @@
 
 package com.mycompany.app;
 
+import static javax.xml.XMLConstants.XML_NS_PREFIX;
+
 public class App 
 {
     public static void main( String[] args )
     {
-        System.out.println("Hello " + getDay(DAY_OF_WEEK.FRIDAY));
+        System.out.println( "Hello Remote World!" );
+        System.out.println("The XML namespace prefix is: " + XML_NS_PREFIX);
     }
-
-    static String getDay(DAY_OF_WEEK dayOfWeek) {
-        return switch (dayOfWeek) {
-            case MONDAY, TUESDAY, WEDNESDAY, THRUSDAY, FRIDAY -> "Weekday";
-            case SATURDAY, SUNDAY -> "Weekend";
-        };
-    }
-
-    static enum DAY_OF_WEEK { MONDAY, TUESDAY, WEDNESDAY, THRUSDAY, FRIDAY, SATURDAY, SUNDAY};
 }

@@ -7,7 +7,7 @@
             "cwd": "${workspaceFolder}/test-project",
             "console": "internalConsole",
             "stopOnEntry": false,
-            "mainClass": "com.mycompany.app.App",
+            "mainClass": "mymodule/com.mycompany.app.App",
             "args": "",
             "projectName": "my-app"
         }

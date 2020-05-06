@@ -3,7 +3,7 @@
 # Licensed under the MIT License. See https://go.microsoft.com/fwlink/?linkid=2090316 for license information.
 #-------------------------------------------------------------------------------------------------------------
 
-FROM openjdk:12-jdk
+FROM openjdk:11-jdk
 
 # This Dockerfile adds a non-root user with sudo access. Use the "remoteUser"
 # property in devcontainer.json to use it. On Linux, the container user's GID/UIDs
@@ -13,15 +13,21 @@ ARG USERNAME=vscode
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-RUN groupadd --gid $USER_GID $USERNAME \
+# Configure apt
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+    && apt-get -y install --no-install-recommends apt-utils dialog 2>&1 \
+    #
+    # Create a non-root user to use if preferred - see https://aka.ms/vscode-remote/containers/non-root-user.
+    && groupadd --gid $USER_GID $USERNAME \
     && useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $USERNAME \
     # [Optional] Add sudo support for the non-root user
-    && yum install -y sudo \
-    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
-    && chmod 0440 /etc/sudoers.d/$USERNAME 
-
-# Verify git, needed tools installed
-RUN yum install -y git openssh-clients less net-tools which curl procps unzip
+    && apt-get install -y sudo \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME\
+    && chmod 0440 /etc/sudoers.d/$USERNAME \
+    #
+    # Verify git, needed tools installed
+    && apt-get -y install git openssh-client less iproute2 procps curl lsb-release
 
 #-------------------Uncomment the following steps to install Maven CLI Tools----------------------------------
 # ARG MAVEN_VERSION=3.6.3
@@ -49,8 +55,11 @@ RUN yum install -y git openssh-clients less net-tools which curl procps unzip
 #     && ln -s "${GRADLE_HOME}/bin/gradle" /usr/bin/gradle
 #-------------------------------------------------------------------------------------------------------------
 
-# Clean yum cache
-RUN yum clean all
+# Clean up
+RUN apt-get autoremove -y \
+    && apt-get clean -y \
+    && rm -rf /var/lib/apt/lists/*
+ENV DEBIAN_FRONTEND=dialog
 
-# Allow for a consistent java home location for settings - image is changing over time
+# Allow for a consistant java home location for settings - image is changing over time
 RUN if [ ! -d "/docker-java-home" ]; then ln -s "${JAVA_HOME}" /docker-java-home; fi

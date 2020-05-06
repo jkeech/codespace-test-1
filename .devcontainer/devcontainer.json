@@ -1,14 +1,13 @@
 {
-	"name": "Java 12",
+	"name": "Java 11",
 	"dockerFile": "Dockerfile",
 
 	// Set *default* container specific settings.json values on container create.
 	"settings": { 
 		"terminal.integrated.shell.linux": "/bin/bash",
-		"java.home": "/usr/java/openjdk-12",
-		"git.ignoreLegacyWarning": true
+		"java.home": "/docker-java-home"
 	},
-
+	
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
 		"vscjava.vscode-java-pack"
