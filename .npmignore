@@ -3,3 +3,4 @@ test-project
 definition-build.json
 .vscode
 .npmignore
+environment.yml
