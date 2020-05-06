@@ -1,9 +1,6 @@
 {
 	"name": "Docker in Docker",
-	"build": {
-		"dockerfile": "Dockerfile",
-		"args": { "ENABLE_NONROOT_DOCKER": "false" }
-	},
+	"dockerFile": "Dockerfile",
 	"mounts": [ "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind" ],
 
 	// Set *default* container specific settings.json values on container create.
