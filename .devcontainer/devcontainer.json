@@ -1,5 +1,5 @@
 {
-	"name": "Java 11",
+	"name": "Java 8 & Tomcat 8.5",
 	"dockerFile": "Dockerfile",
 
 	// Set *default* container specific settings.json values on container create.
@@ -10,7 +10,8 @@
 	
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
-		"vscjava.vscode-java-pack"
+		"vscjava.vscode-java-pack",
+		"adashen.vscode-tomcat"
 	]
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.

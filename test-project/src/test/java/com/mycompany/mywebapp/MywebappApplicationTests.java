@@ -3,26 +3,19 @@
  * Licensed under the MIT License. See https://go.microsoft.com/fwlink/?linkid=2090316 for license information.
  *-------------------------------------------------------------------------------------------------------------*/
 
-package com.mycompany.app;
+package com.mycompany.mywebapp;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class MywebappApplicationTests {
 
-public class AppTest
-{
-    public AppTest() {
-    }
+	@Test
+	public void contextLoads() {
+	}
 
-    @Test
-    public void testApp()
-    {
-        assertTrue( true );
-    }
-
-    @Test
-    public void testMore()
-    {
-        assertTrue( true );
-    }
 }

@@ -3,7 +3,17 @@
  * Licensed under the MIT License. See https://go.microsoft.com/fwlink/?linkid=2090316 for license information.
  *-------------------------------------------------------------------------------------------------------------*/
 
-module mymodule {
-    requires java.base;
-    requires java.xml;
+package com.mycompany.mywebapp;
+
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class HelloController {
+
+    @RequestMapping("/")
+    public String index() {
+        return "Hello World!";
+    }
 }
+

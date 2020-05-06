@@ -35,13 +35,6 @@ checkExtension() {
     checkMultiple "$1" 1 "[ -d ""$HOME/.vscode-server/extensions/$1*"" ]" "[ -d ""$HOME/.vscode-server-insiders/extensions/$1*"" ]" "[ -d ""$HOME/.vscode-test-server/extensions/$1*"" ]"
 }
 
-# Prep
-echo -e "\nGetting Maven wrapper..."
-curl -sSL https://github.com/takari/maven-wrapper/archive/maven-wrapper-0.5.5.tar.gz| tar -xzf -
-mv maven-wrapper-maven-wrapper-0.5.5/mvnw mvnw
-mv maven-wrapper-maven-wrapper-0.5.5/.mvn .mvn
-rm -rf mv maven-wrapper-maven-wrapper-0.5.5
-
 # Actual tests
 checkMultiple "vscode-server" 1 "[ -d ""$HOME/.vscode-server/bin"" ]" "[ -d ""$HOME/.vscode-server-insiders/bin"" ]" "[ -d ""$HOME/.vscode-test-server/bin"" ]"
 checkExtension "vscjava.vscode-java-pack"
@@ -51,12 +44,22 @@ check "sudo" sudo -u vscode echo "sudo works."
 check "git" git --version
 check "command-line-tools" which top ip lsb_release curl
 check "java" java -version
-check "build-and-test-jar" ./mvnw package
-check "test-project" java -jar target/my-app-1.0-SNAPSHOT.jar
+check "build-and-test-jar" mvn package
+mv target/mywebapp-0.0.1-SNAPSHOT.war $CATALINA_HOME/webapps/mywebapp.war
+echo "" >  $CATALINA_HOME/logs/catalina.out
+check "tomcat-startup" $CATALINA_HOME/bin/startup.sh
+STARTED=0
+while [ "$STARTED" == "0" ]; do
+    echo "Waiting for deployment to be done..."
+    STARTED=$(cat $CATALINA_HOME/logs/catalina.out | grep "c.m.mywebapp.MywebappApplication         : Started MywebappApplication" | wc -l)
+    sleep 2
+done
+check "test-project" [ "$(curl -o /dev/null -sSLI -w '%{http_code}\n' 'http://localhost:8080/mywebapp')" == "200" ]
+check "tomcat-shutdown" $CATALINA_HOME/bin/shutdown.sh
 
-# Clean up
-rm -f mvnw
-rm -rf .mvn
+# Cleanup
+rm $CATALINA_HOME/webapps/mywebapp.war
+rm -rf $CATALINA_HOME/webapps/mywebapp
 
 # Report result
 if [ ${#FAILED[@]} -ne 0 ]; then
