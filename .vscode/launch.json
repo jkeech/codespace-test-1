@@ -1,25 +1,13 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
     "configurations": [
         {
-            "type": "perl",
+            "type": "lldb",
             "request": "launch",
-            "name": "Perl-Debug local",
-            "console": "integratedTerminal",
-            "program": "${workspaceFolder}/test-project/sample.pl",
-            "exec": "perl",
-            "execArgs": [],
-            "root": "${workspaceRoot}/test-project/",
-            "inc": [],
+            "name": "Run your Executable",
+            "program": "${workspaceFolder}/test-project/.build/debug/helloworld",
             "args": [],
-            "env": {},
-            "debugRaw": false,
-            "debugLog": false,
-            "stopOnEntry": true,
-            "sessions": "single"
+            "cwd": "${workspaceFolder}/test-project",
+            "preLaunchTask": "swift-build"
         }
     ]
 }
