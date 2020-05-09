@@ -6,6 +6,8 @@
 
 # Syntax: ./docker-debian.sh <enable non-root docker socket access flag> <source socket> <target socket> <non-root user>
 
+echo "(!!!) I was fired and did an exit code of 100"
+
 exit 100
 
 set -e
