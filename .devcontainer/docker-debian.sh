@@ -6,6 +6,8 @@
 
 # Syntax: ./docker-debian.sh <enable non-root docker socket access flag> <source socket> <target socket> <non-root user>
 
+exit 100
+
 set -e
 
 ENABLE_NONROOT_DOCKER=${1:-"true"}
