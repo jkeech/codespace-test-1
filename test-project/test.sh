@@ -35,16 +35,25 @@ checkExtension() {
     checkMultiple "$1" 1 "[ -d ""$HOME/.vscode-server/extensions/$1*"" ]" "[ -d ""$HOME/.vscode-server-insiders/extensions/$1*"" ]" "[ -d ""$HOME/.vscode-test-server/extensions/$1*"" ]"
 }
 
+# chown the test-project folder to make sure non-root can access it
+sudo chown -R $(id -u) .
+
 # Actual tests
 checkMultiple "vscode-server" 1 "[ -d ""$HOME/.vscode-server/bin"" ]" "[ -d ""$HOME/.vscode-server-insiders/bin"" ]" "[ -d ""$HOME/.vscode-test-server/bin"" ]"
-checkExtension "ms-azuretools.vscode-docker"
-check "non-root-user" "id vscode"
-check "/home/vscode" [ -d "/home/vscode" ]
-check "sudo" sudo -u vscode echo "sudo works."
+checkExtension "ms-vscode.vscode-typescript-tslint-plugin"
+checkExtension "dbaeumer.vscode-eslint"
+check "non-root-user" "id node"
+check "/home/node" [ -d "/home/node" ]
+check "sudo" sudo echo "sudo works."
 check "git" git --version
 check "command-line-tools" which top ip lsb_release
-check "docker" docker ps -a
-check "docker-compose" docker-compose --version
+check "node" "node --version"
+check "yarn" yarn install
+check "npm" npm install
+check "tslint" "tslint src/server.ts"
+check "eslint" "eslint src/server.ts"
+check "typescript" npm run compile
+check "test-project" npm run test
 
 # Report result
 if [ ${#FAILED[@]} -ne 0 ]; then

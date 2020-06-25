@@ -1,63 +1,69 @@
-
 #-------------------------------------------------------------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License. See https://go.microsoft.com/fwlink/?linkid=2090316 for license information.
 #-------------------------------------------------------------------------------------------------------------
 
-# Note: You can use any Debian/Ubuntu based image you want. 
-FROM mcr.microsoft.com/vscode/devcontainers/base:debian-10
+FROM node:12
 
-# This Dockerfile adds a non-root user with sudo access. Use the "remoteUser"
+# The node image includes a non-root user with sudo access. Use the "remoteUser"
 # property in devcontainer.json to use it. On Linux, the container user's GID/UIDs
 # will be updated to match your local UID/GID (when using the dockerFile property).
 # See https://aka.ms/vscode-remote/containers/non-root-user for details.
-ARG USERNAME=vscode
+ARG USERNAME=node
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-# Docker script args, location, and expected SHA - SHA generated on release
-ARG DOCKER_SCRIPT_SOURCE="https://raw.githubusercontent.com/microsoft/vscode-dev-containers/master/script-library/docker-debian.sh"
-ARG DOCKER_SCRIPT_SHA="dev-mode"
-ARG ENABLE_NONROOT_DOCKER="true"
-ARG SOURCE_SOCKET=/var/run/docker-host.sock
-ARG TARGET_SOCKET=/var/run/docker.sock
+# Docker Compose version
+ARG COMPOSE_VERSION=1.24.0
 
-COPY docker-debian.sh /tmp/docker-debian.sh
-
-ARG DEBIAN_FRONTEND=noninteractive
+# Configure apt and install packages
 RUN apt-get update \
-    # Verify common dependencies and utilities are installed
-    && apt-get -y install --no-install-recommends apt-utils dialog git openssh-client curl less iproute2 procps 2>&1 \
+    && export DEBIAN_FRONTEND=noninteractive \
+    && apt-get -y install --no-install-recommends apt-utils dialog 2>&1 \ 
     #
-    # Create a non-root user to use if not already available - see https://aka.ms/vscode-remote/containers/non-root-user.
-    && if [ $(getent passwd $USERNAME) ]; then \
-        # If exists, see if we need to tweak the GID/UID
-        if [ "$USER_GID" != "1000" ] || [ "$USER_UID" != "1000" ]; then \
-            groupmod --gid $USER_GID $USERNAME \
-            && usermod --uid $USER_UID --gid $USER_GID $USERNAME \
-            && chown -R $USER_UID:$USER_GID /home/$USERNAME; \
-        fi; \
-    else \
-        # Otherwise ccreate the non-root user
-        groupadd --gid $USER_GID $USERNAME \
-        && useradd -s /bin/bash --uid $USER_UID --gid $USER_GID -m $USERNAME \
-        # Add sudo support for the non-root user
-        && apt-get install -y sudo \
-        && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME\
-        && chmod 0440 /etc/sudoers.d/$USERNAME; \
+    # Verify git and needed tools are installed
+    && apt-get -y install git openssh-client less iproute2 procps \
+    #
+    # Install Docker CE CLI
+    && apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common lsb-release \
+    && curl -fsSL https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]')/gpg | (OUT=$(apt-key add - 2>&1) || echo $OUT) \
+    && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]') $(lsb_release -cs) stable" \
+    && apt-get update \
+    && apt-get install -y docker-ce-cli \
+    #
+    # Install Docker Compose
+    && curl -sSL "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose \
+    && chmod +x /usr/local/bin/docker-compose \
+    #
+    # Install Dapr
+    && wget -q https://raw.githubusercontent.com/dapr/cli/master/install/install.sh -O - | /bin/bash \
+    #
+    # Remove outdated yarn from /opt and install via package 
+    # so it can be easily updated via apt-get upgrade yarn
+    && rm -rf /opt/yarn-* \
+    && rm -f /usr/local/bin/yarn \
+    && rm -f /usr/local/bin/yarnpkg \
+    && apt-get install -y curl apt-transport-https lsb-release \
+    && curl -sS https://dl.yarnpkg.com/$(lsb_release -is | tr '[:upper:]' '[:lower:]')/pubkey.gpg | apt-key add - 2>/dev/null \
+    && echo "deb https://dl.yarnpkg.com/$(lsb_release -is | tr '[:upper:]' '[:lower:]')/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
+    && apt-get update \
+    && apt-get -y install --no-install-recommends yarn \
+    #
+    # Install tslint and typescript globally
+    && npm install -g tslint eslint typescript \
+    #
+    # [Optional] Update a non-root user to UID/GID if needed.
+    && if [ "$USER_GID" != "1000" ] || [ "$USER_UID" != "1000" ]; then \
+        groupmod --gid $USER_GID $USERNAME \
+        && usermod --uid $USER_UID --gid $USER_GID $USERNAME \
+        && chown -R $USER_UID:$USER_GID /home/$USERNAME; \
     fi \
-    #
-    # Use Docker script from script library to set things up
-    && chmod +x /tmp/docker-debian.sh \
-    && /tmp/docker-debian.sh "${ENABLE_NONROOT_DOCKER}" "${SOURCE_SOCKET}" "${TARGET_SOCKET}" "${USERNAME}" \
+    # [Optional] Add add sudo support for non-root user
+    && apt-get install -y sudo \
+    && echo node ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME \
     #
     # Clean up
     && apt-get autoremove -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
-
-# Setting the ENTRYPOINT to docker-init.sh will configure non-root access to 
-# the Docker socket if "overrideCommand": false is set in devcontainer.json. 
-# The script will also execute CMD if you need to alter startup behaviors.
-ENTRYPOINT [ "/usr/local/share/docker-init.sh" ]
-CMD /bin/sh -c "while sleep 1000; do :; done"

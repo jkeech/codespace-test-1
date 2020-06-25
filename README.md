@@ -1,132 +1,75 @@
-# Docker in Docker
+# Dapr with Node.js 12 & TypeScript
 
 ## Summary
 
-*Access your local Docker install from inside a dev container. Installs Docker extension in the container along with needed CLIs.*
+*Develop Dapr applications using Node.js 12 and TypeScript. Includes Dapr, Node.js, eslint, yarn, and the TypeScript compiler.*
 
 | Metadata | Value |  
 |----------|-------|
-| *Contributors* | The VS Code team |
-| *Definition type* | Dockerfile |
+| *Contributors* | The Visual Studio Container Tools team |
+| *Definition type* | Docker Compose |
+| *Works in Codespaces* | No ([#457](https://github.com/MicrosoftDocs/vsonline/issues/457)) |
 | *Container host OS support* | Linux, macOS, Windows |
-| *Languages, platforms* | Any |
+| *Languages, platforms* | Node.js, TypeScript, Dapr |
 
-> **Note:** There is also a [Docker Compose](../docker-in-docker-compose) variation of this same definition.
+## Dapr Notes
 
-## Description
-
-Dev containers can be useful for all types of applications including those that also deploy into a container based-environment. While you can directly build and run the application inside the dev container you create, you may also want to test it by deploying a built container image into your local Docker Desktop instance without affecting your dev container.
-
-This example illustrates how you can do this by running CLI commands and using the [Docker VS Code extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker) right from inside your dev container. It installs the Docker extension inside the container so you can use its full feature set with your project.
-
-## How it works / adapting your existing dev container config
-
-The [`.devcontainer` folder in this repository](.devcontainer) contains a complete example that **you can simply change the `FROM` statement** to another Debian/Ubuntu based image to adapt to your own use (along with adding anything else you need).
-
-However, this section will outline the how you can selectively add this functionality to your own Dockerfile in two parts: enabling access to Docker for the root user, and enabling it for a non-root user.
-
-### Enabling root user access to Docker in the container
-
-You can adapt your own existing development container Dockerfile to support this scenario when running as **root** by following these steps:
-
-1. First, install the Docker CLI in your container. From `.devcontainer/Dockerfile`:
-
-    ```Dockerfile
-    RUN apt-get update \
-        #
-        # Install Docker CE CLI
-        && apt-get install -y apt-transport-https ca-certificates curl gunpg2 lsb-release \
-        && curl -fsSL https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]')/gpg | apt-key add - 2>/dev/null \
-        && echo "deb [arch=amd64] https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]') $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list \
-        && apt-get update \
-        && apt-get install -y docker-ce-cli \
-        #
-        # Install Docker Compose
-        LATEST_COMPOSE_VERSION=$(curl -sSL "https://api.github.com/repos/docker/compose/releases/latest" | grep -o -P '(?<="tag_name": ").+(?=")')
-        curl -sSL "https://github.com/docker/compose/releases/download/${LATEST_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        chmod +x /usr/local/bin/docker-compose
-    ```
-
-2. Then just forward the Docker socket by mounting it in the container using the `mounts` property. From `.devcontainer/devcontainer.json`:
-
-    ```json
-    "mounts": [ "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind" ]
-    ```
-
-3. Press <kbd>F1</kbd> and run **Remote-Containers: Rebuild Container** so the changes take effect.
-
-### Enabling non-root access to Docker in the container
-
-To enable non-root access to Docker in the container, you use `socat` to proxy the Docker socket without affecting its permissions. This is safer than updating the permissions of the host socket itself since this would apply to all containers. You can also alias `docker` to be `sudo docker` in a `.bashrc` file, but this does not work in cases where the Docker socket is accessed directly.
-
-Follow these directions to set up non-root access using `socat`:
-
-1. Follow [the instructions in the Remote - Containers documentation](https://aka.ms/vscode-remote/containers/non-root) to create a non-root user with sudo access if you do not already have one.
-
-2. Follow the [directions in the previous section](#enabling-root-user-access-to-docker-in-the-container) to install the Docker CLI.
-
-3. Update your `devcontainer.json` to mount the Docker socket to `docker-host.sock` in the container and enable the non-root user:
-
-    ```json
-    "mounts": [ "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind" ],
-    "overrideCommand": false,
-    "remoteUser": "vscode"
-    ```
-
-4. Next, add the following to your `Dockerfile` to wire up `socat`:
-
-    ```Dockerfile
-    ARG NONROOT_USER=vscode
-
-    # Default to root only access to the Docker socket, set up non-root init script
-    RUN touch /var/run/docker.socket \
-        && ln -s /var/run/docker-host.socket /var/run/docker.socket
-        && apt-get update \
-        && apt-get -y install socat
-
-    # Create docker-init.sh to spin up socat
-    RUN echo "#!/bin/sh\n\
-        sudo rm -rf /var/run/docker-host.socket\n\
-        ((sudo socat UNIX-LISTEN:/var/run/docker.socket,fork,mode=660,user=${NONROOT_USER} UNIX-CONNECT:/var/run/docker-host.socket) 2>&1 >> /tmp/vscr-dind-socat.log) & > /dev/null\n\
-        \$@" >> /usr/local/share/docker-init.sh
-        && chmod +x /usr/local/share/docker-init.sh
-
-    # Setting the ENTRYPOINT to docker-init.sh will configure non-root access to
-    # the Docker socket if "overrideCommand": false is set in devcontainer.json.
-    # The script will also execute CMD if you need to alter startup behaviors.
-    ENTRYPOINT [ "/usr/local/share/docker-init.sh" ]
-    CMD [ "sleep", "infinity" ]
-    ```
-
-5. Press <kbd>F1</kbd> and run **Remote-Containers: Rebuild Container** so the changes take effect.
-
-That's it!
+When the dev container is created, the definition automatically initializes Dapr on a separate Docker network (to isolate it from Dapr instances running locally or in another Dapr dev container). This is done via the `postCreateCommand` in the `.devcontainer/devcontainer.json` and the `DAPR_NETWORK` environment variable in the `.devcontainer/docker-compose.yml`. The `DAPR_REDIS_HOST` and `DAPR_PLACEMENT_HOST` environment variables ensure that Dapr `run` commands implicitly connect to the Dapr instance in that Docker network.
 
 ## Using this definition with an existing folder
 
-There are no special setup steps are required, but note that the included `.devcontainer/Dockerfile` can be altered to work with other Debian/Ubuntu-based container images such as `node` or `python`. Just, update the `FROM` statement to reference the new base image. For example:
+This definition installs `tslint` globally and includes the VS Code TSLint extension for backwards compatibility, but [TSLint has been deprecated](https://github.com/palantir/tslint/issues/4534) in favor of ESLint, so `eslint` and its corresponding extension has been included as well.
 
-```Dockerfile
-FROM node:lts
-```
+Both `eslint`and `typescript` are installed globally for convenance, but [as of ESLint 6](https://eslint.org/docs/user-guide/migrating-to-6.0.0#-plugins-and-shareable-configs-are-no-longer-affected-by-eslints-location), you will need to install the following packages locally to lint TypeScript code: `@typescript-eslint/eslint-plugin`, `@typescript-eslint/parser`, `eslint`, `typescript`.
 
-Beyond that, just follow these steps to use the definition:
+To get started, follow these steps:
 
 1. If this is your first time using a development container, please follow the [getting started steps](https://aka.ms/vscode-remote/containers/getting-started) to set up your machine.
 
 2. To use VS Code's copy of this definition:
    1. Start VS Code and open your project folder.
    2. Press <kbd>F1</kbd> select and **Remote-Containers: Add Development Container Configuration Files...** from the command palette.
-   3. Select the Docker in Docker definition.
+   3. Select the Dapr with Node.js 12 & TypeScript definition.
 
 3. To use latest-and-greatest copy of this definition from the repository:
    1. Clone this repository.
-   2. Copy the contents of `containers/docker-in-docker/.devcontainer` to the root of your project folder.
+   2. Copy the contents of `containers/dapr-typescript-node-12/.devcontainer` to the root of your project folder.
    3. Start VS Code and open your project folder.
 
 4. After following step 2 or 3, the contents of the `.devcontainer` folder in your project can be adapted to meet your needs.
 
 5. Finally, press <kbd>F1</kbd> and run **Remote-Containers: Reopen Folder in Container** to start using the definition.
+
+## Testing the definition
+
+This definition includes some test code that will help you verify it is working as expected on your system. Follow these steps:
+
+1. If this is your first time using a development container, please follow the [getting started steps](https://aka.ms/vscode-remote/containers/getting-started) to set up your machine.
+2. Clone this repository.
+3. Start VS Code, press <kbd>F1</kbd>, and select **Remote-Containers: Open Folder in Container...**
+4. Select the `containers/dapr-typescript-node-12` folder.
+5. After the folder has opened in the container, press <kbd>F5</kbd> to start the project. This will automatically run `npm install` and compile the source before starting it.
+6. Start the application with Dapr:
+
+    ```bash
+    $ cd test-project
+    $ npm run dapr
+    ```
+
+7. In a separate terminal, invoke the application via Dapr:
+
+    ```bash
+    # Deposit funds to the account (creating the account if not exists)
+    $ curl -d 42 -H "Content-Type: application/json" -w "\n" -X POST http://localhost:3500/v1.0/invoke/test/method/accounts/123/deposit
+    42
+    # Withdraws funds from the account
+    $ curl -d 10 -H "Content-Type: application/json" -w "\n" -X POST http://localhost:3500/v1.0/invoke/test/method/accounts/123/withdraw
+    32
+    # Get the balance of the account
+    $ curl -w "\n" http://localhost:3500/v1.0/invoke/test/method/accounts/123
+    32
+    $
+    ```
 
 ## License
 

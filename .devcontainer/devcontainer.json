@@ -1,28 +1,31 @@
 {
-	"name": "Docker in Docker",
-	"dockerFile": "Dockerfile",
-	"mounts": [ "source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind" ],
+	"name": "Dapr with Node.js 12 & TypeScript",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "docker-from-docker",
+	"workspaceFolder": "/workspace",
 
 	// Set *default* container specific settings.json values on container create.
 	"settings": { 
 		"terminal.integrated.shell.linux": "/bin/bash"
 	},
 
+	// Ensure Dapr is running on opening the container
+	"postCreateCommand": "dapr init",
+
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
-		"ms-azuretools.vscode-docker"
+		"dbaeumer.vscode-eslint",
+		"ms-azuretools.vscode-dapr",
+		"ms-azuretools.vscode-docker",
+		"ms-vscode.vscode-typescript-tslint-plugin"
 	]
-	
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
 
-	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "docker --version",
+	// Uncomment the next line if you want start specific services in your Docker Compose config.
+	// "runServices": [],
 
-	// Uncomment when using a ptrace-based debugger like C++, Go, and Rust
-	// "runArgs": [ "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined" ],
+	// Uncomment the next line if you want to keep your containers running after VS Code shuts down.
+	// "shutdownAction": "none",
 
-	// Uncomment the next two lines to connect as a non-root user. See https://aka.ms/vscode-remote/containers/non-root.
-	// "overrideCommand": false,
-	// "remoteUser": "vscode"
+	// Uncomment to connect as a non-root user. See https://aka.ms/vscode-remote/containers/non-root.
+	// "remoteUser": "node"
 }
