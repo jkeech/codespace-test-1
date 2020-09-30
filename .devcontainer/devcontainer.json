@@ -17,6 +17,12 @@
 	"settings": { 
 		"terminal.integrated.shell.linux": "/bin/bash"
 	},
+	"containerEnv": {
+		"TEST":"/usr/local/test2"
+	},
+	"remoteEnv": {
+		"PATH": "${containerEnv:TEST}:${containerEnv:PATH}"
+	},
 
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
