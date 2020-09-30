@@ -21,7 +21,8 @@
 		"TEST":"/usr/local/test2"
 	},
 	"remoteEnv": {
-		"PATH": "${containerEnv:TEST}:${containerEnv:PATH}"
+		"PATH": "${containerEnv:TEST}:${containerEnv:PATH}",
+		"TEST2":"testval-${continerEnv:TEST}"
 	},
 
 	// Add the IDs of extensions you want installed when the container is created.
