@@ -17,9 +17,9 @@
 	"settings": { 
 		"terminal.integrated.shell.linux": "/bin/bash"
 	},
-	//"containerEnv": {
-	//	"TEST":"/usr/local/test2"
-	//},
+	"containerEnv": {
+		"TEST":"/usr/local/test2"
+	},
 	"remoteEnv": {
 		"TEST3": "test3",
 		"TEST2":"testval-${continerEnv:TEST}",
